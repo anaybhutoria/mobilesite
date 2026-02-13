@@ -1,17 +1,385 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anay's Mobile Site</title>
-    <style>
-        body { font-family: -apple-system, system-ui, sans-serif; margin: 0; padding: 2rem; background: #0a0a0a; color: #fff; }
-        h1 { font-size: 2rem; }
-        p { color: #888; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>FlightDeck</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiRmxpZ2h0RGVjayIsInNob3J0X25hbWUiOiJGbGlnaHREZWNrIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMwYTBlMWEiLCJ0aGVtZV9jb2xvciI6IiMwYTBlMWEiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLDxzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTAwIDEwMCc+PHRleHQgeT0nLjllbScgZm9udC1zaXplPSc5MCc+4p2I77iPPC90ZXh0Pjwvc3ZnPiIsInNpemVzIjoiYW55IiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--card:#141828;--card2:#1a2035;--accent:#6c63ff;--accent2:#00d4aa;--text:#e8eaf6;--text2:#8892b0;--danger:#ff5252;--warn:#ffab40;--success:#69f0ae;--radius:16px;--shadow:0 8px 32px rgba(0,0,0,.4)}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:4px}
+
+/* Header */
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,var(--bg) 60%,transparent);padding:20px 16px 30px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.header h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:flex;align-items:center;gap:10px}
+.header h1 span{font-size:24px;-webkit-text-fill-color:initial}
+.header p{color:var(--text2);font-size:13px;margin-top:4px}
+
+/* Search */
+.search-wrap{margin:0 16px 8px;position:relative}
+.search-wrap input{width:100%;padding:16px 54px 16px 20px;border:2px solid transparent;border-radius:var(--radius);background:var(--card);color:var(--text);font-size:16px;outline:none;transition:.3s}
+.search-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(108,99,255,.15)}
+.search-wrap input::placeholder{color:var(--text2)}
+.search-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:42px;height:42px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.search-btn:active{transform:translateY(-50%) scale(.9)}
+
+/* Tabs */
+.tabs{display:flex;margin:16px 16px 8px;gap:8px}
+.tab{flex:1;padding:10px;border:none;border-radius:12px;background:var(--card);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:.3s}
+.tab.active{background:var(--accent);color:#fff}
+
+/* Cards */
+.cards{padding:8px 16px 100px;display:flex;flex-direction:column;gap:12px}
+.flight-card{background:var(--card);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;animation:slideUp .4s ease;transition:transform .2s}
+.flight-card:active{transform:scale(.98)}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.flight-num{font-size:22px;font-weight:800;letter-spacing:1px}
+.status-badge{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.status-scheduled{background:rgba(108,99,255,.15);color:var(--accent)}
+.status-boarding{background:rgba(255,171,64,.15);color:var(--warn)}
+.status-departed{background:rgba(0,212,170,.15);color:var(--accent2)}
+.status-in-flight{background:rgba(0,212,170,.2);color:var(--accent2)}
+.status-landed{background:rgba(105,240,174,.15);color:var(--success)}
+.status-delayed{background:rgba(255,82,82,.15);color:var(--danger)}
+.status-cancelled{background:rgba(255,82,82,.2);color:var(--danger)}
+
+.route{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.airport{text-align:center;flex:1}
+.airport .code{font-size:26px;font-weight:800}
+.airport .city{font-size:11px;color:var(--text2);margin-top:2px}
+.airport .time{font-size:14px;color:var(--text);margin-top:6px;font-weight:600}
+.route-line{flex:2;display:flex;align-items:center;position:relative;height:30px}
+.route-line::before{content:'';position:absolute;top:50%;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:1px}
+.route-line .plane{position:absolute;font-size:20px;top:50%;transform:translateY(-50%);animation:fly 3s ease-in-out infinite alternate;filter:drop-shadow(0 0 6px var(--accent))}
+@keyframes fly{from{left:10%}to{left:80%}}
+
+.card-meta{display:flex;gap:16px;flex-wrap:wrap}
+.meta-item{font-size:12px;color:var(--text2)}
+.meta-item strong{color:var(--text);font-weight:600}
+
+.countdown{margin-top:12px;padding:12px;border-radius:12px;background:rgba(108,99,255,.08);text-align:center;font-size:14px;color:var(--accent);font-weight:600}
+
+.card-actions{position:absolute;top:12px;right:12px;display:flex;gap:6px}
+.card-actions button{width:32px;height:32px;border:none;border-radius:8px;background:rgba(255,255,255,.05);color:var(--text2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.card-actions button:hover{background:rgba(255,82,82,.15);color:var(--danger)}
+
+/* Empty */
+.empty{text-align:center;padding:60px 20px;color:var(--text2)}
+.empty .icon{font-size:64px;margin-bottom:16px;opacity:.5}
+.empty p{font-size:15px;line-height:1.6}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--card);border-radius:var(--radius) var(--radius) 0 0;padding:24px 20px 40px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;animation:slideModal .3s ease}
+@keyframes slideModal{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h2{font-size:20px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.modal label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:600}
+.modal input,.modal select{width:100%;padding:14px 16px;border:2px solid rgba(255,255,255,.06);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;outline:none;margin-bottom:16px;transition:.3s}
+.modal input:focus,.modal select:focus{border-color:var(--accent)}
+.modal select option{background:var(--bg)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-btns{display:flex;gap:10px;margin-top:8px}
+.modal-btns button{flex:1;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:active{transform:scale(.96)}
+.btn-secondary{background:rgba(255,255,255,.06);color:var(--text2)}
+
+/* Lookup panel */
+.lookup-results{margin:0 16px 12px;padding:16px;background:var(--card);border-radius:var(--radius);display:none;animation:slideUp .3s}
+.lookup-results h3{font-size:14px;color:var(--text2);margin-bottom:12px}
+.lookup-links{display:flex;flex-direction:column;gap:8px}
+.lookup-links a{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--card2);border-radius:12px;color:var(--text);text-decoration:none;font-size:14px;font-weight:600;transition:.2s}
+.lookup-links a:active{transform:scale(.97)}
+.lookup-links a .arrow{margin-left:auto;color:var(--text2)}
+
+/* FAB */
+.fab{position:fixed;bottom:24px;right:20px;width:56px;height:56px;border:none;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:28px;cursor:pointer;box-shadow:0 8px 24px rgba(108,99,255,.4);z-index:50;display:flex;align-items:center;justify-content:center;transition:.2s}
+.fab:active{transform:scale(.9)}
+
+/* Pull to refresh indicator */
+.ptr{text-align:center;padding:12px;color:var(--accent);font-size:13px;font-weight:600;opacity:0;transition:.3s;height:0;overflow:hidden}
+.ptr.show{opacity:1;height:40px}
+
+/* Toast */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card2);color:var(--text);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:300;transition:.3s;opacity:0;box-shadow:var(--shadow)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
 </head>
 <body>
-    <h1>⚡ Mobile Site</h1>
-    <p>Coming soon.</p>
+
+<div class="header">
+  <h1><span>✈️</span> FlightDeck</h1>
+  <p id="subtitle">Track your flights</p>
+</div>
+
+<div class="search-wrap">
+  <input type="text" id="searchInput" placeholder="Enter flight number (e.g. WS137)" autocomplete="off" autocapitalize="characters" spellcheck="false">
+  <button class="search-btn" id="searchBtn" aria-label="Search">🔍</button>
+</div>
+
+<div class="lookup-results" id="lookupPanel">
+  <h3>🔎 Look up <strong id="lookupFlight"></strong> on:</h3>
+  <div class="lookup-links">
+    <a id="linkFA" href="#" target="_blank" rel="noopener">🟢 FlightAware <span class="arrow">→</span></a>
+    <a id="linkFR" href="#" target="_blank" rel="noopener">🟡 Flightradar24 <span class="arrow">→</span></a>
+    <a id="linkGoog" href="#" target="_blank" rel="noopener">🔵 Google Flights <span class="arrow">→</span></a>
+  </div>
+  <div class="modal-btns" style="margin-top:14px">
+    <button class="btn-primary" onclick="openAddModal(document.getElementById('searchInput').value.trim().toUpperCase())">➕ Track Manually</button>
+    <button class="btn-secondary" onclick="closeLookup()">Close</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-filter="all">All</button>
+  <button class="tab" data-filter="active">Active</button>
+  <button class="tab" data-filter="completed">Completed</button>
+</div>
+
+<div class="ptr" id="ptr">↻ Refreshing...</div>
+<div class="cards" id="cards"></div>
+
+<button class="fab" id="fab" aria-label="Add flight">+</button>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>✈️ <span id="modalTitle">Add Flight</span></h2>
+    <label>Flight Number</label>
+    <input type="text" id="fNum" placeholder="WS137" autocapitalize="characters">
+    <div class="row">
+      <div><label>From (Code)</label><input type="text" id="fFrom" placeholder="YYC" maxlength="4" autocapitalize="characters"></div>
+      <div><label>To (Code)</label><input type="text" id="fTo" placeholder="YVR" maxlength="4" autocapitalize="characters"></div>
+    </div>
+    <div class="row">
+      <div><label>From City</label><input type="text" id="fFromCity" placeholder="Calgary"></div>
+      <div><label>To City</label><input type="text" id="fToCity" placeholder="Vancouver"></div>
+    </div>
+    <div class="row">
+      <div><label>Departure</label><input type="datetime-local" id="fDepart"></div>
+      <div><label>Arrival</label><input type="datetime-local" id="fArrive"></div>
+    </div>
+    <label>Status</label>
+    <select id="fStatus">
+      <option value="scheduled">📅 Scheduled</option>
+      <option value="boarding">🚪 Boarding</option>
+      <option value="departed">🛫 Departed</option>
+      <option value="in-flight">✈️ In Flight</option>
+      <option value="landed">🛬 Landed</option>
+      <option value="delayed">⚠️ Delayed</option>
+      <option value="cancelled">❌ Cancelled</option>
+    </select>
+    <label>Gate (optional)</label>
+    <input type="text" id="fGate" placeholder="B42">
+    <label>Notes (optional)</label>
+    <input type="text" id="fNotes" placeholder="Window seat, row 12A">
+    <div class="modal-btns">
+      <button class="btn-primary" id="saveBtn">Save Flight</button>
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LS_KEY = 'flightdeck_flights';
+let flights = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+let editId = null;
+let currentFilter = 'all';
+
+const $ = id => document.getElementById(id);
+const statusEmoji = {scheduled:'📅',boarding:'🚪',departed:'🛫','in-flight':'✈️',landed:'🛬',delayed:'⚠️',cancelled:'❌'};
+const statusLabel = {scheduled:'Scheduled',boarding:'Boarding',departed:'Departed','in-flight':'In Flight',landed:'Landed',delayed:'Delayed',cancelled:'Cancelled'};
+
+function save(){localStorage.setItem(LS_KEY, JSON.stringify(flights))}
+
+function toast(msg){
+  const t=$('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function countdown(dep){
+  if(!dep)return null;
+  const diff=new Date(dep)-new Date();
+  if(diff<=0)return null;
+  const h=Math.floor(diff/36e5),m=Math.floor((diff%36e5)/6e4);
+  if(h>48){const d=Math.floor(h/24);return `${d}d ${h%24}h until departure`}
+  return h>0?`${h}h ${m}m until departure`:`${m}m until departure`;
+}
+
+function fmtTime(dt){
+  if(!dt)return '--:--';
+  return new Date(dt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+function fmtDate(dt){
+  if(!dt)return '';
+  return new Date(dt).toLocaleDateString([],{month:'short',day:'numeric'});
+}
+
+function render(){
+  const c=$('cards');
+  const filtered=flights.filter(f=>{
+    if(currentFilter==='active')return !['landed','cancelled'].includes(f.status);
+    if(currentFilter==='completed')return ['landed','cancelled'].includes(f.status);
+    return true;
+  }).sort((a,b)=>{
+    const ta=a.depart?new Date(a.depart):new Date('2099-01-01');
+    const tb=b.depart?new Date(b.depart):new Date('2099-01-01');
+    return ta-tb;
+  });
+
+  if(!filtered.length){
+    c.innerHTML=`<div class="empty"><div class="icon">✈️</div><p>${flights.length?'No flights in this category':'Search for a flight or tap + to start tracking'}</p></div>`;
+    return;
+  }
+
+  c.innerHTML=filtered.map(f=>{
+    const cd=(['scheduled','boarding','delayed'].includes(f.status))?countdown(f.depart):null;
+    const progress=f.status==='in-flight';
+    return `
+    <div class="flight-card" data-id="${f.id}">
+      <div class="card-actions">
+        <button onclick="editFlight('${f.id}')" title="Edit">✏️</button>
+        <button onclick="deleteFlight('${f.id}')" title="Delete">🗑</button>
+      </div>
+      <div class="card-header">
+        <div class="flight-num">${f.num||'---'}</div>
+        <div class="status-badge status-${f.status}">${statusEmoji[f.status]} ${statusLabel[f.status]}</div>
+      </div>
+      <div class="route">
+        <div class="airport">
+          <div class="code">${f.from||'---'}</div>
+          <div class="city">${f.fromCity||''}</div>
+          <div class="time">${fmtTime(f.depart)}</div>
+        </div>
+        <div class="route-line">${progress?'<div class="plane">✈️</div>':'<div class="plane" style="animation:none;left:50%;font-size:14px;opacity:.4">· · ·</div>'}</div>
+        <div class="airport">
+          <div class="code">${f.to||'---'}</div>
+          <div class="city">${f.toCity||''}</div>
+          <div class="time">${fmtTime(f.arrive)}</div>
+        </div>
+      </div>
+      <div class="card-meta">
+        ${f.depart?`<div class="meta-item">📆 <strong>${fmtDate(f.depart)}</strong></div>`:''}
+        ${f.gate?`<div class="meta-item">🚪 Gate <strong>${f.gate}</strong></div>`:''}
+        ${f.notes?`<div class="meta-item">📝 ${f.notes}</div>`:''}
+      </div>
+      ${cd?`<div class="countdown">⏱ ${cd}</div>`:''}
+    </div>`;
+  }).join('');
+
+  $('subtitle').textContent=`Tracking ${flights.length} flight${flights.length!==1?'s':''}`;
+}
+
+// Search
+$('searchBtn').addEventListener('click', doSearch);
+$('searchInput').addEventListener('keydown', e=>{if(e.key==='Enter')doSearch()});
+
+function doSearch(){
+  const q=$('searchInput').value.trim().toUpperCase();
+  if(!q)return;
+  const lp=$('lookupPanel');
+  $('lookupFlight').textContent=q;
+  $('linkFA').href=`https://flightaware.com/live/flight/${q}`;
+  $('linkFR').href=`https://www.flightradar24.com/${q}`;
+  $('linkGoog').href=`https://www.google.com/search?q=flight+${q}`;
+  lp.style.display='block';
+}
+function closeLookup(){$('lookupPanel').style.display='none'}
+
+// Modal
+$('fab').addEventListener('click', ()=>openAddModal(''));
+function openAddModal(num){
+  editId=null;closeLookup();
+  $('modalTitle').textContent='Add Flight';
+  $('fNum').value=num||'';$('fFrom').value='';$('fTo').value='';
+  $('fFromCity').value='';$('fToCity').value='';
+  $('fDepart').value='';$('fArrive').value='';
+  $('fStatus').value='scheduled';$('fGate').value='';$('fNotes').value='';
+  $('modal').classList.add('show');
+}
+function closeModal(){$('modal').classList.remove('show')}
+$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
+
+$('saveBtn').addEventListener('click',()=>{
+  const f={
+    id:editId||crypto.randomUUID(),
+    num:$('fNum').value.trim().toUpperCase(),
+    from:$('fFrom').value.trim().toUpperCase(),
+    to:$('fTo').value.trim().toUpperCase(),
+    fromCity:$('fFromCity').value.trim(),
+    toCity:$('fToCity').value.trim(),
+    depart:$('fDepart').value,
+    arrive:$('fArrive').value,
+    status:$('fStatus').value,
+    gate:$('fGate').value.trim(),
+    notes:$('fNotes').value.trim()
+  };
+  if(!f.num){toast('Flight number required');return}
+  if(editId){const i=flights.findIndex(x=>x.id===editId);if(i>=0)flights[i]=f}
+  else flights.push(f);
+  save();render();closeModal();
+  toast(editId?'Flight updated':'Flight added ✈️');
+});
+
+function editFlight(id){
+  const f=flights.find(x=>x.id===id);if(!f)return;
+  editId=id;$('modalTitle').textContent='Edit Flight';
+  $('fNum').value=f.num;$('fFrom').value=f.from;$('fTo').value=f.to;
+  $('fFromCity').value=f.fromCity;$('fToCity').value=f.toCity;
+  $('fDepart').value=f.depart;$('fArrive').value=f.arrive;
+  $('fStatus').value=f.status;$('fGate').value=f.gate;$('fNotes').value=f.notes;
+  $('modal').classList.add('show');
+}
+
+function deleteFlight(id){
+  flights=flights.filter(x=>x.id!==id);save();render();toast('Flight removed');
+}
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');currentFilter=t.dataset.filter;render();
+  });
+});
+
+// Countdown ticker
+setInterval(render,60000);
+
+// Pull-to-refresh feel
+let touchStart=0;
+document.addEventListener('touchstart',e=>{if(window.scrollY===0)touchStart=e.touches[0].clientY});
+document.addEventListener('touchmove',e=>{
+  if(touchStart&&e.touches[0].clientY-touchStart>80){
+    $('ptr').classList.add('show');
+  }
+});
+document.addEventListener('touchend',()=>{
+  if($('ptr').classList.contains('show')){render();setTimeout(()=>$('ptr').classList.remove('show'),800)}
+  touchStart=0;
+});
+
+// Service Worker (inline)
+if('serviceWorker' in navigator){
+  const sw=new Blob([`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>new Response('Offline'))));`],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(sw)).catch(()=>{});
+}
+
+render();
+</script>
 </body>
 </html>
